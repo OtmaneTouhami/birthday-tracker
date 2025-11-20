@@ -1,0 +1,42 @@
+quarkus:
+  datasource:
+    db-kind: ${DB_KIND}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    jdbc:
+      url: ${DB_URL}
+  hibernate-orm:
+    log:
+      sql: ${LOG_SQL:true}
+      format-sql: true
+    schema-management:
+      strategy: update
+  http:
+    cors:
+      enabled: true
+      ~: true
+      origins: ${CORS_ORIGINS}
+      methods: GET,POST,PUT,PATCH,DELETE,OPTIONS
+      headers: accept,authorization,content-type,x-requested-with
+      exposed-headers: Content-Disposition
+      access-control-max-age: 24H
+      access-control-allow-credentials: true
+    auth:
+      permission:
+        authenticated:
+          paths: /api/*
+          policy: authenticated
+        public:
+          paths: /api/auth/*
+          policy: permit
+
+# JWT Configuration
+mp:
+  jwt:
+    verify:
+      issuer: ${JWT_ISSUER}
+smallrye:
+  jwt:
+    sign:
+      key:
+        value: ${JWT_SIGN_KEY}
