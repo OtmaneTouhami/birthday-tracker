@@ -1,5 +1,8 @@
 package com.krills.exception;
 
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.ws.rs.NotFoundException;
@@ -16,8 +19,23 @@ public class GlobalExceptionHandler implements ExceptionMapper<Exception> {
 
     @Override
     public Response toResponse(Exception exception) {
+
+        Throwable cause = exception.getCause();
+
         if (exception instanceof ConstraintViolationException) {
             return handleConstraintViolation((ConstraintViolationException) exception);
+        } else if (exception instanceof InvalidFormatException) {
+            return handleInvalidFormat((InvalidFormatException) exception);
+        } else if (exception instanceof JsonParseException) {
+            return handleJsonParseException((JsonParseException) exception);
+        } else if (exception instanceof JsonMappingException) {
+            return handleJsonMappingException((JsonMappingException) exception);
+        } else if (cause instanceof InvalidFormatException) {
+            return handleInvalidFormat((InvalidFormatException) cause);
+        } else if (cause instanceof JsonParseException) {
+            return handleJsonParseException((JsonParseException) cause);
+        } else if (cause instanceof JsonMappingException) {
+            return handleJsonMappingException((JsonMappingException) cause);
         } else if (exception instanceof NotFoundException) {
             return handleNotFound((NotFoundException) exception);
         } else if (exception instanceof WebApplicationException) {
@@ -40,6 +58,49 @@ public class GlobalExceptionHandler implements ExceptionMapper<Exception> {
                 "Validation failed",
                 Response.Status.BAD_REQUEST.getStatusCode(),
                 errors
+        );
+
+        return Response.status(Response.Status.BAD_REQUEST)
+                .entity(errorResponse)
+                .build();
+    }
+
+    private Response handleInvalidFormat(InvalidFormatException exception) {
+        String fieldName = exception.getPath().isEmpty() ? "unknown" :
+                exception.getPath().get(exception.getPath().size() - 1).getFieldName();
+        String message = String.format("Invalid value for field '%s': %s", fieldName, exception.getValue());
+
+        ErrorResponse errorResponse = new ErrorResponse(
+                message,
+                Response.Status.BAD_REQUEST.getStatusCode(),
+                Map.of(fieldName, "Invalid format: " + exception.getTargetType().getSimpleName() + " expected")
+        );
+
+        return Response.status(Response.Status.BAD_REQUEST)
+                .entity(errorResponse)
+                .build();
+    }
+
+    private Response handleJsonParseException(JsonParseException exception) {
+        ErrorResponse errorResponse = new ErrorResponse(
+                "Invalid JSON format: " + exception.getOriginalMessage(),
+                Response.Status.BAD_REQUEST.getStatusCode(),
+                null
+        );
+
+        return Response.status(Response.Status.BAD_REQUEST)
+                .entity(errorResponse)
+                .build();
+    }
+
+    private Response handleJsonMappingException(JsonMappingException exception) {
+        String fieldName = exception.getPath().isEmpty() ? "unknown" :
+                exception.getPath().get(exception.getPath().size() - 1).getFieldName();
+
+        ErrorResponse errorResponse = new ErrorResponse(
+                "Invalid JSON mapping for field '" + fieldName + "': " + exception.getOriginalMessage(),
+                Response.Status.BAD_REQUEST.getStatusCode(),
+                Map.of(fieldName, "Invalid value")
         );
 
         return Response.status(Response.Status.BAD_REQUEST)
@@ -75,6 +136,8 @@ public class GlobalExceptionHandler implements ExceptionMapper<Exception> {
     }
 
     private Response handleGenericException(Exception exception) {
+        System.err.println("Unhandled exception type: " + exception.getClass().getName());
+        System.err.println("Exception message: " + exception.getMessage());
         exception.printStackTrace();
 
         ErrorResponse errorResponse = new ErrorResponse(

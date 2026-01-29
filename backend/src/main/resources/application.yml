@@ -1,10 +1,12 @@
 quarkus:
   datasource:
-    db-kind: ${DB_KIND}
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
+    db-kind: ${DB_KIND:h2}
+    username: ${DB_USERNAME:sa}
+    password: ${DB_PASSWORD:}
     jdbc:
-      url: ${DB_URL}
+      url: ${DB_URL:jdbc:h2:mem:birthdaytracker;DB_CLOSE_DELAY=-1}
+  devservices:
+    enabled: false
   hibernate-orm:
     log:
       sql: ${LOG_SQL:true}
@@ -14,8 +16,7 @@ quarkus:
   http:
     cors:
       enabled: true
-      ~: true
-      origins: ${CORS_ORIGINS}
+      origins: ${CORS_ORIGINS:http://localhost:5173,http://localhost}
       methods: GET,POST,PUT,PATCH,DELETE,OPTIONS
       headers: accept,authorization,content-type,x-requested-with
       exposed-headers: Content-Disposition
@@ -27,16 +28,16 @@ quarkus:
           paths: /api/*
           policy: authenticated
         public:
-          paths: /api/auth/*
+          paths: /api/auth/*,/q/*
           policy: permit
 
 # JWT Configuration
 mp:
   jwt:
     verify:
-      issuer: ${JWT_ISSUER}
+      issuer: ${JWT_ISSUER:birthday-tracker}
 smallrye:
   jwt:
     sign:
       key:
-        value: ${JWT_SIGN_KEY}
+        value: ${JWT_SIGN_KEY:6+3F31j/fWjtPBALFGM6ncxh6D6VxbtgdJ5XOByqNMXUaiF8bYaf8LF7ehuDKdYgqX0iZtF4fdNimpRYoqt1nw==}
