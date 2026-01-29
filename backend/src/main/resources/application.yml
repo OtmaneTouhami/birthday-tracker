@@ -16,7 +16,7 @@ quarkus:
   http:
     cors:
       enabled: true
-      origins: ${CORS_ORIGINS:http://localhost:5173,http://localhost}
+      origins: ${CORS_ORIGINS:http://localhost:5173,http://localhost,http://localhost:80}
       methods: GET,POST,PUT,PATCH,DELETE,OPTIONS
       headers: accept,authorization,content-type,x-requested-with
       exposed-headers: Content-Disposition
@@ -39,5 +39,4 @@ mp:
 smallrye:
   jwt:
     sign:
-      key:
-        value: ${JWT_SIGN_KEY:6+3F31j/fWjtPBALFGM6ncxh6D6VxbtgdJ5XOByqNMXUaiF8bYaf8LF7ehuDKdYgqX0iZtF4fdNimpRYoqt1nw==}
+      key: ${JWT_SIGN_KEY:6+3F31j/fWjtPBALFGM6ncxh6D6VxbtgdJ5XOByqNMXUaiF8bYaf8LF7ehuDKdYgqX0iZtF4fdNimpRYoqt1nw==}
